@@ -138,12 +138,41 @@ input:focus {
 /* ========== Footer (Optional) ========== */
 footer {
   text-align: center;
-  padding: 1rem;
+  padding: 2rem 1rem;
   background-color: #f4f4f4;
-  color: #555;
+  color: #333;
   margin-top: 2rem;
-  border-top: 2px solid #cc0033;
+  border-top: 3px solid #cc0033;
 }
+
+footer h3 {
+  margin-bottom: 1rem;
+  color: #cc0033;
+  font-size: 1.2rem;
+}
+
+footer .important-links {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.2rem;
+}
+
+footer .important-links li a {
+  color: #cc0033;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color 0.2s ease-in;
+}
+
+footer .important-links li a:hover {
+  color: #990000;
+  text-decoration: underline;
+}
+
 
 /* ===== Carousel Styles ===== */
 .carousel-container {
