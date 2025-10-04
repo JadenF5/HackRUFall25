@@ -36,7 +36,17 @@ async function main() {
       prereqs: ["CS101", "MATH141"],
       difficulty: 4,
       location: "Busch"
-    }
+    },
+    {
+      _id: "MA011",
+      title: "Precalculus I Workshop",
+      description: "A workshop course that covers algebra, functions, and trigonometry to prepare students for calculus.",
+      major: "Mathematics",
+      tags: ["precalculus", "algebra", "trigonometry", "workshop"],
+      prereqs: [],
+      difficulty: 2,
+      location: "Livingston"
+    },
   ];
 
   await classesCol.deleteMany({});
