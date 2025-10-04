@@ -1,0 +1,32 @@
+{
+    "name": "project",
+    "version": "1.0.0",
+    "main": "app.js",
+    "type": "module",
+    "scripts": {
+        "start": "node app.js",
+        "seed": "node seed.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/JadenF5/HackRUFall25"
+    },
+    "author": "Jaden",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/JadenF5/HackRUFall25/issues"
+    },
+    "homepage": "https://github.com/JadenF5/HackRUFall25#readme",
+    "description": "",
+    "dependencies": {
+        "axios": "^1.9.0",
+        "bcryptjs": "^3.0.2",
+        "express": "^4.21.2",
+        "express-fileupload": "^1.5.1",
+        "express-handlebars": "^8.0.1",
+        "express-session": "^1.18.1",
+        "mongodb": "^6.16.0",
+        "project": "file:",
+        "xss": "^1.0.15"
+    }
+}
