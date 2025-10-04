@@ -25,25 +25,68 @@ router.post("/search", async (req, res) => {
   }
 });
 
+/**
+ * GET /api/majors
+ * Returns: list of all majors
+ */
+router.get("/majors", async (req, res) => {
+  try {
+    const majorsCol = await collections.majors();
+    const majors = await majorsCol.find({}).toArray();
+    res.json(majors);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/**
+ * GET /api/majors/:id/classes
+ * Returns: list of classes in a given major
+ */
 router.get("/majors/:id/classes", async (req, res) => {
-  const classesCol = await collections.classes();
-  const results = await classesCol.find({ major: req.params.id }).toArray();
-  res.json(results);
+  try {
+    const classesCol = await collections.classes();
+    const results = await classesCol.find({ major: req.params.id }).toArray();
+    res.json(results);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
+/**
+ * GET /api/class/:id/ratings
+ * Returns: ratings for a given class
+ */
 router.get("/class/:id/ratings", async (req, res) => {
-  const ratingsCol = await collections.ratings();
-  const results = await ratingsCol.find({ classId: req.params.id }).toArray();
-  res.json(results);
+  try {
+    const ratingsCol = await collections.ratings();
+    const results = await ratingsCol.find({ classId: req.params.id }).toArray();
+    res.json(results);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
+/**
+ * GET /api/class/:id/location
+ * Returns: building + coordinates for class
+ */
 router.get("/class/:id/location", async (req, res) => {
-  const classesCol = await collections.classes();
-  const cls = await classesCol.findOne({ _id: req.params.id });
-  if (!cls) return res.status(404).json({ error: "Not found" });
-  res.json({ building: cls.building, coords: cls.coords });
+  try {
+    const classesCol = await collections.classes();
+    const cls = await classesCol.findOne({ _id: req.params.id });
+    if (!cls) return res.status(404).json({ error: "Not found" });
+    res.json({ building: cls.building, coords: cls.coords });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
+/**
+ * POST /api/ai/recommend
+ * body: { interests: "AI and robotics" }
+ * Returns: AI-generated recommended classes
+ */
 router.post("/ai/recommend", async (req, res) => {
   try {
     const { interests } = req.body;

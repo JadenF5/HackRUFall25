@@ -1,0 +1,15 @@
+<section>
+  <h2>{{major.name}}</h2>
+  <p>{{major.description}}</p>
+
+  <h3>Classes in this major</h3>
+  {{#if classes.length}}
+    <ul>
+      {{#each classes}}
+        <li><a href="/class/{{_id}}">{{title}}</a> — {{description}}</li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p>No classes found for this major yet.</p>
+  {{/if}}
+</section>
