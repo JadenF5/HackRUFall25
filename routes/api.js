@@ -25,4 +25,33 @@ router.post("/search", async (req, res) => {
   }
 });
 
+router.get("/majors/:id/classes", async (req, res) => {
+  const classesCol = await collections.classes();
+  const results = await classesCol.find({ major: req.params.id }).toArray();
+  res.json(results);
+});
+
+router.get("/class/:id/ratings", async (req, res) => {
+  const ratingsCol = await collections.ratings();
+  const results = await ratingsCol.find({ classId: req.params.id }).toArray();
+  res.json(results);
+});
+
+router.get("/class/:id/location", async (req, res) => {
+  const classesCol = await collections.classes();
+  const cls = await classesCol.findOne({ _id: req.params.id });
+  if (!cls) return res.status(404).json({ error: "Not found" });
+  res.json({ building: cls.building, coords: cls.coords });
+});
+
+router.post("/ai/recommend", async (req, res) => {
+  try {
+    const { interests } = req.body;
+    const recs = await aiService.getClassRecommendations(interests, 5);
+    res.json(recs);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 export default router;

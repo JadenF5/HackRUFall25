@@ -16,4 +16,18 @@ router.get("/class/:id", async (req, res) => {
   res.render("class", { cls });
 });
 
+router.get("/major/:id", async (req, res) => {
+  const majorsCol = await collections.majors();
+  const classesCol = await collections.classes();
+  const major = await majorsCol.findOne({ _id: req.params.id });
+  const classes = await classesCol.find({ major: major.name }).toArray();
+  res.render("major", { major, classes });
+});
+
+router.get("/club/:id", async (req, res) => {
+  const clubsCol = await collections.clubs();
+  const club = await clubsCol.findOne({ _id: req.params.id });
+  res.render("club", { club });
+});
+
 export default router;
