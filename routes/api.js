@@ -3,7 +3,7 @@ import express from "express";
 import xss from "xss";
 import collections from "../config/mongoCollections.js";
 import * as courseService from "../services/courseService.js";
-import * as aiService from "../services/aiService.js";
+import { getClassRecommendations } from "../services/aiService.js"; // <-- changed
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ router.post("/search", async (req, res) => {
   try {
     const q = xss(req.body.query || "");
     const localResults = await courseService.searchLocal(q);
-    const aiRec = await aiService.getClassRecommendations(q, 5);
+    const aiRec = await getClassRecommendations(q, 5); // <-- changed
     res.json({ local: localResults, ai: aiRec });
   } catch (e) {
     console.error(e);
@@ -108,9 +108,22 @@ router.get("/class/:id/location", async (req, res) => {
 router.post("/ai/recommend", async (req, res) => {
   try {
     const { interests } = req.body;
-    const recs = await aiService.getClassRecommendations(interests, 5);
+    const recs = await getClassRecommendations(interests, 5); // <-- changed
     res.json(recs);
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// add above export default router;
+router.get("/search", async (req, res) => {
+  try {
+    const q = xss(req.query.q || req.query.query || "");
+    const localResults = await courseService.searchLocal(q);
+    const aiRec = await getClassRecommendations(q, 5); // <-- changed
+    res.json({ local: localResults, ai: aiRec });
+  } catch (e) {
+    console.error(e);
     res.status(500).json({ error: e.message });
   }
 });
