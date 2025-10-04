@@ -144,3 +144,59 @@ footer {
   margin-top: 2rem;
   border-top: 2px solid #cc0033;
 }
+
+/* ===== Carousel Styles ===== */
+.carousel-container {
+  position: relative;
+  max-width: 800px;
+  margin: 2rem auto;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.carousel-slide {
+  display: none;
+  text-align: center;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.carousel-slide img:hover {
+  transform: scale(1.02);
+}
+
+/* Arrows */
+.arrow {
+  position: absolute;
+  top: 50%;
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 0.5rem;
+  margin-top: -20px;
+  color: white;
+  background: rgba(0,0,0,0.4);
+  cursor: pointer;
+  border-radius: 50%;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.arrow:hover {
+  background: rgba(0,0,0,0.8);
+}
+
+.arrow.left {
+  left: 10px;
+}
+
+.arrow.right {
+  right: 10px;
+}
+
