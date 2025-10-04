@@ -1,28 +1,31 @@
 // services/aiService.js
 import 'dotenv/config';
 
-// ---- Safety: require key early (but don't crash routes on import if you prefer) ----
 const GROQ_KEY = process.env.GROQ_API_KEY;
 if (!GROQ_KEY) {
   console.warn('[aiService] Missing GROQ_API_KEY — calls will fail until it is set.');
 }
 
-// Node 18+ has global fetch. If you’re on Node 16, install node-fetch and:
-// import fetch from 'node-fetch';
-
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
-// Prompt builder kept tiny and strict
 function buildPrompt(userInterests, max) {
   return `
-Return ONLY valid JSON (no prose): an array with up to ${max} objects.
-Each object: {"title": string, "reason": string (one short sentence), "prereqs": string (can be empty)}.
-If unsure, return [].
+You recommend **Rutgers University** undergraduate classes.
+
+Rules:
+- Prefer real Rutgers courses if possible (e.g., CS, ECE, Math, Psych, HCI, etc.).
+- If you know the Rutgers course **code**, include it (e.g., "CS101" or "01:198:214").
+- If you're unsure about the exact Rutgers code, still recommend relevant classes, but set "code" to a short slug (no spaces).
+- Output ONLY valid JSON (no prose): an array with up to ${max} objects.
+- Each object MUST be: 
+  {"code": string, "title": string, "reason": string (one short sentence), "prereqs": string (can be empty)}
+- No extra keys, no markdown, no explanations.
+- If unsure, return [].
+
 Student interests: "${userInterests}"
 `.trim();
 }
 
-// Call Groq’s OpenAI-compatible endpoint
 async function genWithGroq(prompt, { useJsonMode = true } = {}) {
   const body = {
     model: GROQ_MODEL,
@@ -33,11 +36,7 @@ async function genWithGroq(prompt, { useJsonMode = true } = {}) {
     temperature: 0.2,
     max_tokens: 800,
   };
-
-  if (useJsonMode) {
-    // Some Groq models support OpenAI-style JSON mode. If it errors, we retry without it.
-    body.response_format = { type: 'json_object' };
-  }
+  if (useJsonMode) body.response_format = { type: 'json_object' };
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -50,8 +49,8 @@ async function genWithGroq(prompt, { useJsonMode = true } = {}) {
 
   if (!res.ok) {
     const t = await res.text().catch(() => '');
-    // If response_format caused a 400, retry once without JSON mode.
     if (useJsonMode && res.status === 400) {
+      // retry once without JSON mode
       return genWithGroq(prompt, { useJsonMode: false });
     }
     throw new Error(`Groq ${res.status}: ${t || res.statusText}`);
@@ -66,7 +65,6 @@ export async function getClassRecommendations(userInterests, max = 5) {
 
   const prompt = buildPrompt(userInterests, max);
 
-  // Optional light retry (e.g., for transient 429)
   let text;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -78,22 +76,30 @@ export async function getClassRecommendations(userInterests, max = 5) {
     }
   }
 
-  // Defensive JSON extraction
+  // Extract JSON array
   const start = text.indexOf('[');
   const jsonText = start >= 0 ? text.slice(start) : text;
 
   try {
     const arr = JSON.parse(jsonText);
     if (!Array.isArray(arr)) throw new Error('not array');
-    return arr.slice(0, max).map(it => ({
-      title: String(it?.title ?? '').trim(),
-      reason: String(it?.reason ?? '').trim(),
-      prereqs: String(it?.prereqs ?? '').trim(),
-    }));
+    // normalize + add linkPath
+    // inside getClassRecommendations, after you parsed `arr`:
+    return arr.slice(0, max).map(it => {
+      const rawCode = String(it?.code ?? '').trim();
+      const title = String(it?.title ?? '').trim();
+      const reason = String(it?.reason ?? '').trim();
+      const prereqs = String(it?.prereqs ?? '').trim();
+      // Slug/ID to use if no code was provided
+      const fallbackCode = title ? title.replace(/[^A-Za-z0-9]+/g, '').slice(0, 40) : 'unknown';
+      const code = rawCode || fallbackCode;
+      // Your route expects /class/:id (e.g., /class/CS101)
+      const linkPath = `/class/${encodeURIComponent(code)}`;
+      return { code, title, reason, prereqs, linkPath };
+    });
   } catch {
-    return [{ title: 'AI output (parse failed)', reason: text.slice(0, 300), prereqs: '' }];
+    return [{ code: 'AI', title: 'AI output (parse failed)', reason: text.slice(0, 300), prereqs: '', linkPath: '/class/AI' }];
   }
 }
 
-// Support both named and namespace/default imports
 export default { getClassRecommendations };
