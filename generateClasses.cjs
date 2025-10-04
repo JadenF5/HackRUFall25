@@ -1,89 +1,295 @@
-require('dotenv').config();
-const { MongoClient } = require('mongodb');
-const fetch = require('node-fetch');
+// // generateClasses.cjs (CommonJS version)
+// require("dotenv").config();
+// const { MongoClient } = require("mongodb");
+// const Groq = require("groq-sdk");
 
-// MongoDB setup
-const mongoClient = new MongoClient(process.env.MONGO_URI || 'mongodb://localhost:27017');
-const dbName = 'rutgersDB';
-const collectionName = 'Classes';
+// // Groq setup
+// const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// Hugging Face API
-const HF_API_TOKEN = process.env.HUGGINGFACE_API_KEY;
-const MODEL = 'gpt2'; // You can switch to other hosted models if desired
+// // MongoDB connection
+// const uri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017";
+// const client = new MongoClient(uri);
+// const dbName = "HackRUFall25";
+// const collectionName = "Classes";
 
-// Example Rutgers classes — start with a few
-const rutgersClasses = [
-  { code: 'CS101', name: 'Introduction to Computer Science' },
-  { code: 'MATH201', name: 'Calculus II' },
-  { code: 'PHIL100', name: 'Introduction to Philosophy' }
+// // Sample courses
+// const courses = [
+//   "CS111 Introduction to Computer Science",
+//   "CS112 Data Structures and Algorithms",
+//   "CS211 Computer Organization",
+//   "CS213 Software Design & Development",
+//   "CS311 Algorithms & Complexity",
+//   "MATH135 Calculus I",
+//   "MATH136 Calculus II",
+//   "MATH211 Linear Algebra",
+//   "PHYS101 Physics I (Mechanics)",
+//   "CHEM101 General Chemistry",
+//   "ENGL101 English Composition",
+//   "PSYCH101 Introduction to Psychology",
+//   "ECON101 Principles of Economics",
+//   "ECE110 Introduction to Electrical & Computer Engineering",
+//   "ECE210 Digital Logic",
+//   "ECE250 Circuits",
+//   "ME211 Statics",
+//   "CHE211 Thermodynamics",
+//   "ENG101 Introduction to Engineering",
+//   "ENG102 Engineering Design",
+//   "ACC201 Principles of Accounting",
+//   "FIN301 Corporate Finance",
+//   "MGT201 Principles of Management",
+//   "MKT301 Marketing Principles",
+//   "STAT201 Statistics for Business",
+//   "OM301 Operations Management",
+//   "PHIL100 Introduction to Philosophy",
+//   "HIST101 World History",
+//   "SOC101 Introduction to Sociology",
+//   "ART101 Introduction to Art",
+//   "SPAN101 Elementary Spanish I",
+//   "FREN101 Elementary French I",
+//   "BIO101 Introduction to Biology",
+//   "BIO102 General Biology Lab",
+//   "CHEM102 Organic Chemistry",
+//   "PHYS102 Physics II (Electricity & Magnetism)",
+//   "MATH222 Multivariable Calculus",
+//   "CS215 Programming Languages",
+//   "CS310 Computer Networks",
+//   "CS320 Database Systems",
+//   "CS330 Operating Systems",
+//   "CS340 Artificial Intelligence",
+//   "ENG201 Technical Writing",
+//   "ENG301 Engineering Ethics",
+//   "MKT302 Marketing Research",
+//   "PSYCH201 Cognitive Psychology",
+//   "SOC201 Sociology of Family",
+//   "HIST201 US History",
+//   "PHIL200 Ethics",
+//   "SPAN102 Elementary Spanish II",
+//   "FREN102 Elementary French II"
+// ];
+
+// // Generate description
+// async function generateDescription(courseCode) {
+//   try {
+//     const response = await groq.chat.completions.create({
+//       model: "llama-3.1-8b-instant",
+//       messages: [
+//         {
+//           role: "system",
+//           content: "You are an assistant that generates short, clear Rutgers class descriptions.",
+//       },
+//       {
+//         role: "user",
+//         content: `Write a 2-3 sentence engaging description for the Rutgers course ${courseCode}.`,
+//       },
+//     ],
+//     max_tokens: 100,
+//   });
+
+
+//     return response.choices[0].message.content.trim();
+//   } catch (error) {
+//     console.error("Groq API error:", error);
+//     return null;
+//   }
+// }
+
+// // Main function
+// async function main() {
+//   try {
+//     await client.connect();
+//     const db = client.db(dbName);
+//     const collection = db.collection(collectionName);
+
+//     for (const course of courses) {
+//       console.log(`Generating description for ${course}...`);
+
+//       const exists = await collection.findOne({ code: course });
+//       if (exists) {
+//         console.log(`${course} already exists. Skipping.`);
+//         continue;
+//       }
+
+//       const description = await generateDescription(course);
+
+//       const courseDoc = {
+//         code: course,
+//         department: 
+//         description: description || "Description unavailable.",
+//         createdAt: new Date(),
+//       };
+
+//       await collection.insertOne(courseDoc);
+//       console.log(`Inserted ${course} into MongoDB.`);
+//     }
+
+//     console.log("Finished generating classes!");
+//   } catch (err) {
+//     console.error("Error:", err);
+//   } finally {
+//     await client.close();
+//   }
+// }
+
+// main();
+
+
+require("dotenv").config(); 
+const { MongoClient } = require("mongodb");
+const Groq = require("groq-sdk");
+
+// Groq setup
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// MongoDB connection
+const uri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017";
+const client = new MongoClient(uri);
+const dbName = "HackRUFall25";
+const collectionName = "Classes";
+
+// Sample courses
+const courses = [
+  "CS111 Introduction to Computer Science",
+  "CS112 Data Structures and Algorithms",
+  "CS211 Computer Organization",
+  "CS213 Software Design & Development",
+  "CS311 Algorithms & Complexity",
+  "MATH135 Calculus I",
+  "MATH136 Calculus II",
+  "MATH211 Linear Algebra",
+  "PHYS101 Physics I (Mechanics)",
+  "CHEM101 General Chemistry",
+  "ENGL101 English Composition",
+  "PSYCH101 Introduction to Psychology",
+  "ECON101 Principles of Economics",
+  "ECE110 Introduction to Electrical & Computer Engineering",
+  "ECE210 Digital Logic",
+  "ECE250 Circuits",
+  "CHE211 Thermodynamics",
+  "ENG101 Introduction to Engineering",
+  "ENG102 Engineering Design",
+  "ACC201 Principles of Accounting",
+  "FIN301 Corporate Finance",
+  "MGT201 Principles of Management",
+  "MKT301 Marketing Principles",
+  "STAT201 Statistics for Business",
+  "OM301 Operations Management",
+  "PHIL100 Introduction to Philosophy",
+  "HIST101 World History",
+  "SOC101 Introduction to Sociology",
+  "ART101 Introduction to Art",
+  "SPAN101 Elementary Spanish I",
+  "FREN101 Elementary French I",
+  "BIO101 Introduction to Biology",
+  "BIO102 General Biology Lab",
+  "CHEM102 Organic Chemistry",
+  "PHYS102 Physics II (Electricity & Magnetism)",
+  "MATH222 Multivariable Calculus",
+  "CS215 Programming Languages",
+  "CS310 Computer Networks",
+  "CS320 Database Systems",
+  "CS330 Operating Systems",
+  "CS340 Artificial Intelligence",
+  "ENG201 Technical Writing",
+  "ENG301 Engineering Ethics",
+  "MKT302 Marketing Research",
+  "PSYCH201 Cognitive Psychology",
+  "SOC201 Sociology of Family",
+  "HIST201 US History",
+  "PHIL200 Ethics",
+  "SPAN102 Elementary Spanish II",
+  "FREN102 Elementary French II"
 ];
 
-// Delay function
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+// Map of course prefixes to departments
+const departmentMap = {
+  CS: "Computer Science",
+  MATH: "Mathematics",
+  PHYS: "Physics",
+  CHEM: "Chemistry",
+  BIO: "Biology",
+  ENGL: "English",
+  ENG: "Engineering",
+  PSYCH: "Psychology",
+  ECON: "Economics",
+  ECE: "Electrical & Computer Engineering",
+  ME: "Mechanical Engineering",
+  ACC: "Accounting",
+  FIN: "Finance",
+  MGT: "Management",
+  MKT: "Marketing",
+  STAT: "Statistics",
+  OM: "Operations Management",
+  PHIL: "Philosophy",
+  HIST: "History",
+  SOC: "Sociology",
+  ART: "Art",
+  SPAN: "Languages",
+  FREN: "Languages"
+};
 
-// Generate class description via Hugging Face API
-async function generateDescription(course) {
-  const prompt = `Write a concise 2-3 sentence description for the Rutgers class ${course.code} - ${course.name}.`;
+// Generate description
+async function generateDescription(courseCode) {
+  try {
+    const response = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content: "You are an assistant that generates short, clear Rutgers class descriptions.",
+        },
+        {
+          role: "user",
+          content: `Write a 2-3 sentence engaging description for the Rutgers course ${courseCode}.`,
+        },
+      ],
+      max_tokens: 100,
+    });
 
-  const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${HF_API_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ inputs: prompt })
-  });
-
-  const data = await response.json();
-
-  // Hugging Face may return an error field if the model is loading
-  if (data.error) {
-    console.error('Hugging Face API error:', data.error);
-    return 'Description could not be generated at this time.';
+    return response.choices[0].message.content.trim();
+  } catch (error) {
+    console.error("Groq API error:", error);
+    return null;
   }
-
-  // Depending on the model, output may be an array of text objects
-  if (Array.isArray(data)) return data[0].generated_text.trim();
-  if (data.hasOwnProperty('generated_text')) return data.generated_text.trim();
-
-  return data.toString().trim();
 }
 
 // Main function
 async function main() {
   try {
-    await mongoClient.connect();
-    const db = mongoClient.db(dbName);
-    const classesCollection = db.collection(collectionName);
+    await client.connect();
+    const db = client.db(dbName);
+    const collection = db.collection(collectionName);
 
-    for (const course of rutgersClasses) {
-      const existing = await classesCollection.findOne({ code: course.code });
-      if (existing) {
-        console.log(`${course.code} already exists. Skipping.`);
+    for (const course of courses) {
+      console.log(`Generating description for ${course}...`);
+
+      const exists = await collection.findOne({ code: course });
+      if (exists) {
+        console.log(`${course} already exists. Skipping.`);
         continue;
       }
 
-      console.log(`Generating description for ${course.code}...`);
       const description = await generateDescription(course);
 
-      await classesCollection.insertOne({
-        code: course.code,
-        name: course.name,
-        description,
-        featured: true
-      });
+      // Extract department from course code prefix
+      const prefix = course.split(/[\s:]/)[0].match(/[A-Z]+/)[0];
+      const department = departmentMap[prefix] || "Unknown";
 
-      console.log(`Inserted ${course.code} into MongoDB.`);
-      await sleep(300); // 300ms delay
+      const courseDoc = {
+        code: course,
+        department,
+        description: description || "Description unavailable.",
+        createdAt: new Date(),
+      };
+
+      await collection.insertOne(courseDoc);
+      console.log(`Inserted ${course} into MongoDB.`);
     }
 
-    console.log('Finished generating classes!');
+    console.log("Finished generating classes!");
   } catch (err) {
-    console.error(err);
+    console.error("Error:", err);
   } finally {
-    await mongoClient.close();
+    await client.close();
   }
 }
 
