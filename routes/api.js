@@ -4,6 +4,7 @@ import xss from "xss";
 import collections from "../config/mongoCollections.js";
 import * as courseService from "../services/courseService.js";
 import { getClassRecommendations } from "../services/aiService.js"; // <-- changed
+import * as professorService from "../services/professorService.js";
 
 const router = express.Router();
 
@@ -122,6 +123,38 @@ router.get("/search", async (req, res) => {
     const localResults = await courseService.searchLocal(q);
     const aiRec = await getClassRecommendations(q, 5); // <-- changed
     res.json({ local: localResults, ai: aiRec });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.get("/class/:id/professors", async (req, res) => {
+  try {
+    const classesCol = await collections.classes();
+    let cls = await classesCol.findOne({ _id: req.params.id });
+    if (!cls) return res.status(404).json({ professors: [] });
+
+    if (!cls.professors || cls.professors.length === 0) {
+      await courseService.updateClassWithSOC(req.params.id, {
+        year: 2025,
+        term: 9,
+        campus: "NB",
+        level: "UG"
+      });
+      cls = await classesCol.findOne({ _id: req.params.id });
+    }
+
+    const ratings = [];
+    for (const profName of cls.professors) {
+      const data = await professorService.getProfessorRatings(profName);
+      if (data) ratings.push(data);
+    }
+
+    // ✅ sort by highest rating first
+    ratings.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
+    res.json({ professors: ratings });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });

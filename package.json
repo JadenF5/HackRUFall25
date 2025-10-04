@@ -19,7 +19,7 @@
     "homepage": "https://github.com/JadenF5/HackRUFall25#readme",
     "dependencies": {
         "@google/genai": "^1.22.0",
-        "axios": "^1.9.0",
+        "axios": "^1.12.2",
         "bcryptjs": "^3.0.2",
         "dotenv": "^17.2.3",
         "express": "^4.21.2",
@@ -29,6 +29,7 @@
         "mongodb": "^6.20.0",
         "openai": "^6.1.0",
         "project": "file:",
+        "ratemyprofessor-api": "^1.0.1",
         "xss": "^1.0.15"
     },
     "keywords": [],
