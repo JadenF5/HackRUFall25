@@ -271,3 +271,37 @@ footer .important-links li a:hover {
   right: 10px;
 }
 
+.list { list-style: none; padding-left: 0; }
+.list li { margin: .5rem 0; }
+.muted { color: #777; font-size: .9em; }
+.smaller { font-size: .85em; }
+
+/* AI page layout */
+.card { max-width: 900px; }              /* widen the card */
+.card .row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* make the input take all remaining space */
+#ai-class-input,
+#ai-major-input {
+  flex: 1 1 auto;         /* grow to fill */
+  width: 100%;            /* full width inside the flex item */
+  padding: 10px 12px;
+  font-size: 16px;
+  line-height: 1.3;
+  box-sizing: border-box;
+}
+
+/* keep the Search button from stretching */
+#ai-class-btn,
+#ai-major-btn {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  white-space: nowrap;    /* text stays on one line */
+  cursor: pointer;
+}
+
+

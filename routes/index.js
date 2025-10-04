@@ -71,4 +71,8 @@ router.get("/club/:id", async (req, res) => {
   res.render("club", { club });
 });
 
+router.get("/ai", (req, res) => {
+  res.render("ai", { title: "AI Helpers • ClassFoRU" });
+});
+
 export default router;

@@ -3,7 +3,7 @@ import express from "express";
 import xss from "xss";
 import collections from "../config/mongoCollections.js";
 import * as courseService from "../services/courseService.js";
-import { getClassRecommendations } from "../services/aiService.js"; // <-- changed
+import { getClassRecommendations, getMajorSuggestions } from "../services/aiService.js"; // <-- changed
 import * as professorService from "../services/professorService.js";
 
 const router = express.Router();
@@ -157,6 +157,17 @@ router.get("/class/:id/professors", async (req, res) => {
     res.json({ professors: ratings });
   } catch (e) {
     console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// AI: suggest majors for undecided students
+router.post("/ai/majors", async (req, res) => {
+  try {
+    const interests = xss(req.body.interests || req.body.query || "");
+    const recs = await getMajorSuggestions(interests, 5);
+    res.json(recs);
+  } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });

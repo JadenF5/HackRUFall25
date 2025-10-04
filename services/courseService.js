@@ -69,3 +69,42 @@ export async function updateClassWithSOC(classId, socOpts) {
 
   console.log(`Class ${classId} (${cls.subject}:${cls.number}) updated with professors:`, profList);
 }
+
+/* ---------- NEW: local text search ---------- */
+export async function searchLocal(query, { limit = 20 } = {}) {
+  const q = String(query || "").trim();
+  const classesCol = await collections.classes();
+
+  if (!q) return []; // empty query → empty results
+
+  // If you have a text index, prefer it:
+  // db.classes.createIndex({ title: "text", description: "text", major: "text", subject: "text", number: "text" })
+  try {
+    const useText = await classesCol.indexExists("title_text_description_text_major_text_subject_text_number_text");
+    if (useText) {
+      const cursor = classesCol.find(
+        { $text: { $search: q } },
+        { projection: { score: { $meta: "textScore" } } }
+      ).sort({ score: { $meta: "textScore" } }).limit(limit);
+      return cursor.toArray();
+    }
+  } catch { /* fall through to regex */ }
+
+  // Fallback: case-insensitive regex on a few fields
+  const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "i");
+  const cursor = classesCol.find({
+    $or: [
+      { title: rx },
+      { description: rx },
+      { major: rx },
+      { subject: rx },     // e.g. "198"
+      { number: rx },      // e.g. "111"
+      { _id: rx },         // allows direct code hits like "CS111" if that's your _id
+    ]
+  }).limit(limit);
+
+  return cursor.toArray();
+}
+
+// (Optional) default export if you ever use namespace imports elsewhere
+export default { fetchFromSOC, updateClassWithSOC, searchLocal };
