@@ -111,92 +111,102 @@ function fallbackClassSuggestions(userInterests, max = 5) {
 export async function getClassRecommendations(userInterests, max = 5) {
   if (!userInterests || !userInterests.trim()) return [];
 
-  const prompt = buildPromptClasses(userInterests, max);
+  const prompt = buildPrompt(userInterests, max);
 
-  let text = '';
+  let text;
   for (let attempt = 0; attempt < 2; attempt++) {
-    try { text = await genWithGroq(prompt); break; }
-    catch (e) { if (attempt === 1) throw e; await new Promise(r => setTimeout(r, 600)); }
+    try {
+      text = await genWithGroq(prompt, { useJsonMode: true });
+      break;
+    } catch (e) {
+      if (attempt === 1) throw e;
+      await new Promise(r => setTimeout(r, 600));
+    }
   }
 
-  const arr = parseArrayish(text) || [];
-  const finalArr = arr.length ? arr : fallbackClassSuggestions(userInterests, max);
+  // Extract JSON array
+  const start = text.indexOf('[');
+  const jsonText = start >= 0 ? text.slice(start) : text;
 
-  return finalArr.slice(0, max).map(it => {
-    const rawCode = String(it?.code ?? '').trim();
-    const title = String(it?.title ?? '').trim();
-    const reason = String(it?.reason ?? '').trim();
-    const prereqs = String(it?.prereqs ?? '').trim();
-    const fallbackCode = title ? title.replace(/[^A-Za-z0-9]+/g, '').slice(0, 40) : 'unknown';
-    const code = rawCode || fallbackCode;
-    // no link fields (you asked for non-clickable)
-    return { code, title, reason, prereqs };
-  });
+  try {
+    const arr = JSON.parse(jsonText);
+    if (!Array.isArray(arr)) throw new Error('not array');
+    // normalize + add linkPath
+    // inside getClassRecommendations, after you parsed `arr`:
+    return arr.slice(0, max).map(it => {
+      const rawCode = String(it?.code ?? '').trim();
+      const title = String(it?.title ?? '').trim();
+      const reason = String(it?.reason ?? '').trim();
+      const prereqs = String(it?.prereqs ?? '').trim();
+      // Slug/ID to use if no code was provided
+      const fallbackCode = title ? title.replace(/[^A-Za-z0-9]+/g, '').slice(0, 40) : 'unknown';
+      const code = rawCode || fallbackCode;
+      // Your route expects /class/:id (e.g., /class/CS101)
+      const linkPath = `/class/${encodeURIComponent(code)}`;
+      return { code, title, reason, prereqs, linkPath };
+    });
+  } catch {
+    return [{ code: 'AI', title: 'AI output (parse failed)', reason: text.slice(0, 300), prereqs: '', linkPath: '/class/AI' }];
+  }
 }
 
-/* ----------------- MAJORS ----------------- */
-function buildPromptMajors(userInterests, max) {
+// --- majors finder: suggests Rutgers majors + prereqs ---
+function buildMajorsPrompt(userInterests, max) {
   return `
 You recommend **Rutgers University** undergraduate majors.
 
 Rules:
 - Prefer real Rutgers majors (e.g., Computer Science, ECE, Psychology, Business Analytics, HCI, etc.).
-- Output ONLY a JSON array (no prose, no wrapper object) with up to ${max} objects.
+- Output ONLY valid JSON (no prose): array with up to ${max} objects.
 - Each object MUST be:
   {"code": string, "name": string, "reason": string (one short sentence), "prereqs": string (short list or empty)}
 - "code" should be a short slug (e.g., "CS", "ECE", "PSY", "BAIT"). If unsure, make a short alphanumeric slug without spaces.
+- No extra keys, no markdown.
 - If unsure, return [].
 
 Student interests: "${userInterests}"
 `.trim();
 }
 
-function fallbackMajorSuggestions(userInterests, max = 5) {
-  const q = (userInterests || '').toLowerCase();
-  const out = [];
-  const push = (code, name, reason, prereqs = '') =>
-    out.length < max && out.push({ code, name, reason, prereqs });
-
-  if (q.includes('math')) {
-    push('MATH', 'Mathematics', 'Deepen proof-based and applied math foundations.');
-    push('STAT', 'Statistics', 'Focus on probability, inference, and data analysis.');
-    push('CS', 'Computer Science', 'Algorithmic thinking and software systems.', 'Calc I–II suggested');
-  } else if (q.includes('history')) {
-    push('HIST', 'History', 'Explore the past and its impact on the present.');
-    push('AMST', 'American Studies', 'Interdisciplinary approach to U.S. culture and history.');
-    push('PSY', 'Psychology', 'Human behavior and cognition fundamentals.');
-  }
-
-  // generic fillers
-  push('BAIT', 'Business Analytics & Information Technology', 'Bridge business and data for decision-making.');
-  push('CIS',  'Cognitive Science', 'Mind, computation, and behavior across disciplines.');
-
-  return out.slice(0, max);
-}
-
 export async function getMajorSuggestions(userInterests, max = 5) {
   if (!userInterests || !userInterests.trim()) return [];
+  const prompt = buildMajorsPrompt(userInterests, max);
 
-  const prompt = buildPromptMajors(userInterests, max);
-
-  let text = '';
+  let text;
   for (let attempt = 0; attempt < 2; attempt++) {
-    try { text = await genWithGroq(prompt); break; }
-    catch (e) { if (attempt === 1) throw e; await new Promise(r => setTimeout(r, 600)); }
+    try {
+      text = await genWithGroq(prompt, { useJsonMode: true });
+      break;
+    } catch (e) {
+      if (attempt === 1) throw e;
+      await new Promise(r => setTimeout(r, 600));
+    }
   }
 
-  const arr = parseArrayish(text) || [];
-  const finalArr = arr.length ? arr : fallbackMajorSuggestions(userInterests, max);
+  const start = text.indexOf('[');
+  const jsonText = start >= 0 ? text.slice(start) : text;
 
-  return finalArr.slice(0, max).map(it => {
-    const rawCode = String(it?.code ?? '').trim();
-    const name = String(it?.name ?? '').trim();
-    const reason = String(it?.reason ?? '').trim();
-    const prereqs = String(it?.prereqs ?? '').trim();
-    const code = rawCode || (name || 'Major').replace(/[^A-Za-z0-9]+/g, '').slice(0, 20) || 'Major';
-    // no link fields (non-clickable)
-    return { code, name, reason, prereqs };
-  });
+  try {
+    const arr = JSON.parse(jsonText);
+    if (!Array.isArray(arr)) throw new Error('not array');
+
+    return arr.slice(0, max).map(it => {
+      const rawCode = String(it?.code ?? '').trim();
+      const name = String(it?.name ?? '').trim();
+      const reason = String(it?.reason ?? '').trim();
+      const prereqs = String(it?.prereqs ?? '').trim();
+
+      const fallback = (name || 'Major').replace(/[^A-Za-z0-9]+/g, '').slice(0, 20) || 'Major';
+      const code = rawCode || fallback;
+
+      // point to your majors view; adjust if your route differs
+      const linkPath = `/majors/${encodeURIComponent(code)}`;
+      return { code, name, reason, prereqs, linkPath };
+    });
+  } catch {
+    return [{ code: 'AI', name: 'AI output (parse failed)', reason: text.slice(0, 300), prereqs: '', linkPath: '/majors/AI' }];
+  }
 }
 
+// keep default export updated
 export default { getClassRecommendations, getMajorSuggestions };
