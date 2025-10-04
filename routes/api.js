@@ -1,3 +1,4 @@
+// routes/api.js
 import express from "express";
 import xss from "xss";
 import collections from "../config/mongoCollections.js";
@@ -8,15 +9,13 @@ const router = express.Router();
 
 /**
  * POST /api/search
- * body: { query: "I like robotics and python" }
- * Returns: array of class objects
+ * body: { query: "robotics and python" }
+ * Returns: { local: [...], ai: [...] }
  */
 router.post("/search", async (req, res) => {
   try {
     const q = xss(req.body.query || "");
-    // First try local keyword filter
     const localResults = await courseService.searchLocal(q);
-    // Also ask AI for improved recommendations
     const aiRec = await aiService.getClassRecommendations(q, 5);
     res.json({ local: localResults, ai: aiRec });
   } catch (e) {
@@ -27,7 +26,7 @@ router.post("/search", async (req, res) => {
 
 /**
  * GET /api/majors
- * Returns: list of all majors
+ * Returns: all majors
  */
 router.get("/majors", async (req, res) => {
   try {
@@ -41,12 +40,17 @@ router.get("/majors", async (req, res) => {
 
 /**
  * GET /api/majors/:id/classes
- * Returns: list of classes in a given major
+ * Returns: classes belonging to a given major
  */
 router.get("/majors/:id/classes", async (req, res) => {
   try {
+    const majorsCol = await collections.majors();
     const classesCol = await collections.classes();
-    const results = await classesCol.find({ major: req.params.id }).toArray();
+
+    const major = await majorsCol.findOne({ _id: req.params.id });
+    if (!major) return res.status(404).json({ error: "Major not found" });
+
+    const results = await classesCol.find({ major: major.name }).toArray();
     res.json(results);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -54,8 +58,22 @@ router.get("/majors/:id/classes", async (req, res) => {
 });
 
 /**
+ * GET /api/clubs
+ * Returns: all clubs
+ */
+router.get("/clubs", async (req, res) => {
+  try {
+    const clubsCol = await collections.clubs();
+    const clubs = await clubsCol.find({}).toArray();
+    res.json(clubs);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/**
  * GET /api/class/:id/ratings
- * Returns: ratings for a given class
+ * Returns: ratings for a class
  */
 router.get("/class/:id/ratings", async (req, res) => {
   try {
@@ -85,7 +103,7 @@ router.get("/class/:id/location", async (req, res) => {
 /**
  * POST /api/ai/recommend
  * body: { interests: "AI and robotics" }
- * Returns: AI-generated recommended classes
+ * Returns: AI-generated recommendations
  */
 router.post("/ai/recommend", async (req, res) => {
   try {

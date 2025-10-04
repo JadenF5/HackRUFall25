@@ -1,16 +1,17 @@
 <section>
+  <h2>Welcome to the Class Recommender</h2>
   <div id="ai-search">
     <input id="search-input" placeholder="Type interests, e.g. 'robotics, python, AI'"/>
     <button id="search-btn">Search</button>
   </div>
 
-  <h2>Top Classes</h2>
+  <h3>Featured Classes</h3>
   <ul>
     {{#each classes}}
-      <li><a href="/class/{{_id}}">{{title}} — {{major}}</a></li>
+      <li><a href="/class/{{_id}}">{{title}}</a> — {{major}}</li>
     {{/each}}
   </ul>
 
-  <h2>AI Recommendations</h2>
+  <h3>AI Recommendations</h3>
   <div id="ai-results"></div>
 </section>
