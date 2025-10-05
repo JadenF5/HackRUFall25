@@ -1,15 +1,92 @@
 <section>
   <h2>Welcome to the Class Recommender</h2>
+
   <div id="ai-search">
     <input id="search-input" placeholder="Type interests, e.g. 'robotics, python, AI'"/>
     <button id="search-btn">Search</button>
   </div>
 
   <h3>Featured Classes</h3>
-  <ul>
-    {{#each classes}}
-      <li><a href="/class/{{_id}}">{{title}}</a> — {{major}}</li>
-    {{/each}}
-  </ul>
+<ul>
+  {{#each classes}}
+    <li>
+      <a href="/class/{{_id}}">{{code}}</a> — {{department}}
+    </li>
+  {{/each}}
+</ul>
 
-  
+
+  <h3>AI Recommendations</h3>
+  <ul id="ai-results"></ul>
+  <script>
+  (function(){
+    const $btn = document.getElementById('search-btn');
+    const $inp = document.getElementById('search-input');
+    const $out = document.getElementById('ai-results');
+
+    // make links obvious & clickable
+    const style = document.createElement('style');
+    style.textContent = `
+      #ai-results a { text-decoration: underline; cursor: pointer; }
+    `;
+    document.head.appendChild(style);
+
+    function renderAI(items){
+      $out.innerHTML = '';
+      if (!Array.isArray(items) || !items.length) {
+        const li = document.createElement('li');
+        li.textContent = 'No AI recommendations.';
+        $out.appendChild(li);
+        return;
+      }
+
+      for (const it of items) {
+        const li = document.createElement('li');
+
+        const href = it?.linkPath || ('/class/' + encodeURIComponent(it?.code || 'unknown'));
+        const codeOrTitle = (it?.code || it?.title || 'Unknown').toString();
+
+        const a = document.createElement('a');
+        a.href = href;
+        a.textContent = codeOrTitle;
+
+        const sep = document.createTextNode(' — ');
+        const titleText = document.createTextNode((it?.title || '').toString());
+
+        const reasonDiv = document.createElement('div');
+        reasonDiv.style.fontSize = '.9em';
+        reasonDiv.style.color = '#888';
+        reasonDiv.textContent = (it?.reason || '').toString();
+
+        li.appendChild(a);
+        li.appendChild(sep);
+        li.appendChild(titleText);
+        li.appendChild(reasonDiv);
+
+        $out.appendChild(li);
+      }
+    }
+
+    async function doSearch() {
+      const query = $inp.value.trim();
+      if (!query) return;
+      try {
+        const res = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+        // Quick sanity check
+        // console.log('AI payload:', data);
+        renderAI(data?.ai || []);
+      } catch (e) {
+        console.error(e);
+        $out.innerHTML = '<li>AI search failed.</li>';
+      }
+    }
+
+    $btn.addEventListener('click', doSearch);
+    $inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+  })();
+  </script>

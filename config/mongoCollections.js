@@ -4,7 +4,7 @@ import { getDb } from "./mongoConnections.js";
 export default {
   classes: async function () {
     const db = getDb();
-    return db.collection("classes");
+    return db.collection("Classes");
   },
   majors: async function () {
     const db = getDb();
