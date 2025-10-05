@@ -8,6 +8,56 @@ import * as professorService from "../services/professorService.js";
 
 const router = express.Router();
 
+// GET /api/classes?offset=0&limit=10
+router.get("/classes", async (req, res) => {
+  try {
+    const offset = Math.max(parseInt(req.query.offset || "0", 10), 0);
+    const limit  = Math.min(Math.max(parseInt(req.query.limit || "10", 10), 1), 100);
+
+    const { department, campus, hasPrereqs, level, sort, order } = req.query;
+
+    // Build filter
+    const match = {};
+    if (department) match.department = department;
+    if (campus) match.campus = campus;
+
+    if (hasPrereqs === "true")  match.hasPrereqs = true;
+    if (hasPrereqs === "false") match.hasPrereqs = false;
+
+    if (level && ["100","200","300"].includes(level)) {
+      match.levelBand = parseInt(level, 10);
+    }
+
+    // Build sort
+    const sortMap = {
+      department: "department",
+      campus: "campus",
+      level: "levelBand",
+      hasPrereqs: "hasPrereqs",
+      code: "code",
+    };
+    const sortField = sortMap[sort] || "code";
+    const sortDir   = (order === "desc") ? -1 : 1;
+    const sortSpec  = { [sortField]: sortDir, code: 1 }; // tie-break on code
+
+    const col = await collections.classes();
+    const [items, total] = await Promise.all([
+      col.find(match).sort(sortSpec).skip(offset).limit(limit).toArray(),
+      col.countDocuments(match)
+    ]);
+
+    res.json({
+      items,
+      total,
+      nextOffset: offset + items.length,
+      hasMore: offset + items.length < total
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /**
  * POST /api/search
  * body: { query: "robotics and python" }

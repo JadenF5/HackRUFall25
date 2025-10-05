@@ -1,8 +1,11 @@
 <section>
   <h2>All Clubs</h2>
-  <ul>
+  <ul class="club-list">
     {{#each clubs}}
-      <li><a href="/club/{{_id}}">{{name}}</a></li>
+      <li class="club-item">
+        <h3 class="club-title"><a href="/club/{{_id}}">{{name}}</a></h3>
+        <p class="club-desc">{{description}}</p>
+      </li>
     {{/each}}
   </ul>
 </section>

@@ -14,5 +14,4 @@ export const majors = [
   { _id: "SOC", name: "Sociology", description: "Study of social life, human behavior, societal structures, and social change." },
   { _id: "PHIL", name: "Philosophy", description: "Study of fundamental questions about existence, knowledge, and values." },
   { _id: "SPAN", name: "SPAN", description: "study of the Spanish language, as well as the literatures, cultures, and histories." },
-
 ];

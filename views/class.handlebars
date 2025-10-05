@@ -1,11 +1,23 @@
 <section>
-  <h2>{{cls.title}}</h2>
-  <p><strong>Major:</strong> {{cls.major}}</p>
-  <p>{{cls.description}}</p>
-  <p><strong>Prereqs:</strong> {{#if cls.prereqs}}{{cls.prereqs}}{{else}}None{{/if}}</p>
-  <p><strong>Location:</strong> {{cls.location}}</p>
+  <h2>{{cls.code}} — {{cls.title}}</h2>
+  <div class="muted">{{cls.department}}{{#if cls.campus}} • {{cls.campus}}{{/if}}</div>
 
-  <h3>Professors & Ratings</h3>
+  {{#if cls.description}}
+    <p style="margin-top:10px">{{cls.description}}</p>
+  {{/if}}
+
+  <div class="class-meta" style="margin-top:12px">
+    <div><strong>Prereqs:</strong>
+      {{#if cls.prereqs.length}}
+        {{#each cls.prereqs}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+      {{else}}
+        None
+      {{/if}}
+    </div>
+    <div><strong>Code:</strong> {{cls.code}}</div>
+  </div>
+
+  <h3 style="margin-top:18px">Professors & Ratings</h3>
   <div id="professor-list">
     <p>Loading professor ratings...</p>
   </div>
@@ -13,70 +25,38 @@
 
 <script>
   (async () => {
-    const response = await fetch(`/api/class/{{cls._id}}/professors`);
-    const data = await response.json();
-    const container = document.getElementById("professor-list");
+    try {
+      const res = await fetch(`/api/class/{{cls._id}}/professors`);
+      const data = await res.json();
+      const el = document.getElementById("professor-list");
 
-    if (!data.professors || data.professors.length === 0) {
-      container.innerHTML = "<p>No professor data found.</p>";
-      return;
+      if (!data.professors || !data.professors.length) {
+        el.innerHTML = "<p>No professor data found.</p>";
+        return;
+      }
+
+      el.innerHTML = `
+        <ul>
+          ${data.professors.map(p => {
+            const name = [p.firstName, p.lastName].filter(Boolean).join(' ') || 'Professor';
+            const dept = p.department || '—';
+            const rating = (p.rating ?? 'N/A');
+            const diff = (p.difficulty ?? 'N/A');
+            const wta = (p.wouldTakeAgain != null ? p.wouldTakeAgain + '%' : 'N/A');
+            const link = p.rmpLink ? `<br><a href="${p.rmpLink}" target="_blank" rel="noopener">View on RateMyProfessors</a>` : '';
+            return `
+              <li>
+                <strong>${name}</strong> — ${dept}<br>
+                Rating: ${rating} | Difficulty: ${diff} | Would take again: ${wta}
+                ${link}
+              </li>
+            `;
+          }).join('')}
+        </ul>
+      `;
+    } catch (e) {
+      document.getElementById("professor-list").innerHTML = "<p>Failed to load professor data.</p>";
+      console.error(e);
     }
-
-    container.innerHTML = `
-      <ul>
-        ${data.professors.map(p => `
-          <li>
-            <strong>${p.firstName} ${p.lastName}</strong> — ${p.department}<br>
-            Rating: ${p.rating ?? "N/A"}<br>
-            Difficulty: ${p.difficulty ?? "N/A"}<br>
-            Would take again: ${p.wouldTakeAgain ?? "N/A"}%<br>
-            <a href="${p.rmpLink}" target="_blank">View on RateMyProfessors</a>
-          </li>
-        `).join("")}
-      </ul>
-    `;
   })();
-<<<<<<< Updated upstream
-</script>
-
-<section>
-  <h2>{{cls.code}}</h2>
-  <p><strong>Department:</strong> {{cls.department}}</p>
-  <p><strong>Description:</strong> {{cls.description}}</p>
-  <p><strong>Prereqs:</strong> {{#if cls.prereqs}}{{cls.prereqs}}{{else}}None{{/if}}</p>
-  <p><strong>Location:</strong> {{cls.location}}</p>
-
-  <h3>Professors & Ratings</h3>
-  <div id="professor-list">
-    <p>Loading professor ratings...</p>
-  </div>
-</section>
-
-<script>
-  (async () => {
-    const response = await fetch(`/api/class/{{cls._id}}/professors`);
-    const data = await response.json();
-    const container = document.getElementById("professor-list");
-
-    if (!data.professors || data.professors.length === 0) {
-      container.innerHTML = "<p>No professor data found.</p>";
-      return;
-    }
-
-    container.innerHTML = `
-      <ul>
-        ${data.professors.map(p => `
-          <li>
-            <strong>${p.firstName} ${p.lastName}</strong> — ${p.department}<br>
-            Rating: ${p.rating ?? "N/A"}<br>
-            Difficulty: ${p.difficulty ?? "N/A"}<br>
-            Would take again: ${p.wouldTakeAgain ?? "N/A"}%<br>
-            <a href="${p.rmpLink}" target="_blank">View on RateMyProfessors</a>
-          </li>
-        `).join("")}
-      </ul>
-    `;
-  })();
-=======
->>>>>>> Stashed changes
 </script>

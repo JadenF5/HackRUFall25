@@ -1,92 +1,229 @@
 <section>
-  <h2>Welcome to the Class Recommender</h2>
+  <h2>Featured Classes</h2>
 
-  <div id="ai-search">
-    <input id="search-input" placeholder="Type interests, e.g. 'robotics, python, AI'"/>
-    <button id="search-btn">Search</button>
+  <div id="filters" class="filters" style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-bottom:.75rem">
+    <select id="f-dept">
+      <option value="">All Departments</option>
+      <option>Computer Science</option>
+      <option>Mathematics</option>
+      <option>Physics</option>
+      <option>Chemistry</option>
+      <option>Biology</option>
+      <option>English</option>
+      <option>Engineering</option>
+      <option>Psychology</option>
+      <option>Economics</option>
+      <option>Electrical & Computer Engineering</option>
+      <option>Accounting</option>
+      <option>Finance</option>
+      <option>Management</option>
+      <option>Marketing</option>
+      <option>Statistics</option>
+      <option>Operations Management</option>
+      <option>Philosophy</option>
+      <option>History</option>
+      <option>Sociology</option>
+      <option>Art</option>
+      <option>World Languages</option>
+      <option>General Studies</option>
+    </select>
+
+    <select id="f-campus">
+      <option value="">All Campuses</option>
+      <option>College Ave</option>
+      <option>Busch</option>
+      <option>Livingston</option>
+      <option>Cook/Douglass</option>
+    </select>
+
+    <select id="f-prereqs">
+      <option value="">Prereqs: Any</option>
+      <option value="true">Has prereqs</option>
+      <option value="false">No prereqs</option>
+    </select>
+
+    <select id="f-level">
+      <option value="">Level: Any</option>
+      <option value="100">100–199</option>
+      <option value="200">200–299</option>
+      <option value="300">300+</option>
+    </select>
+
+    <select id="f-sort">
+      <option value="code">Sort by: Code</option>
+      <option value="department">Department</option>
+      <option value="campus">Campus</option>
+      <option value="level">Level</option>
+      <option value="hasPrereqs">Has Prereqs</option>
+    </select>
+
+    <select id="f-order">
+      <option value="asc">Asc</option>
+      <option value="desc">Desc</option>
+    </select>
+
+    <button id="f-apply">Apply</button>
+    <button id="f-clear" type="button">Clear</button>
+    <button id="f-reset" type="button">Reset</button>
   </div>
 
-  <h3>Featured Classes</h3>
-<ul>
-  {{#each classes}}
-    <li>
-      <a href="/class/{{_id}}">{{code}}</a> — {{department}}
-    </li>
-  {{/each}}
-</ul>
+  {{#if classes.length}}
+    <ul id="class-list" class="class-list">
+      {{#each classes}}
+        <li class="class-item">
+          <h3 class="class-title">
+            <a href="/class/{{_id}}">{{code}} — {{title}}</a>
+          </h3>
+          <div class="class-meta">
+            <span>{{department}}</span>
+            {{#if campus}} • <span>{{campus}}</span>{{/if}}
+            {{#if levelBand}} • <span>Level {{levelBand}}+</span>{{/if}}
+            {{#if hasPrereqs}} • <span>Prereqs</span>{{/if}}
+          </div>
+          {{#if description}}
+            <p class="class-desc">{{description}}</p>
+          {{/if}}
+        </li>
+      {{/each}}
+    </ul>
 
+    <div style="margin-top:12px">
+      <button id="load-more"
+              data-offset="{{initialLimit}}"
+              data-initial-offset="{{classes.length}}"
+              data-initial-has-more="{{#if hasMore}}true{{else}}false{{/if}}"
+              data-page-size="10"
+              {{#unless hasMore}}style="display:none"{{/unless}}>
+        Load more
+      </button>
+      <span id="load-status" class="muted" style="margin-left:8px"></span>
+    </div>
+  {{else}}
+    <p>No classes to show yet.</p>
+  {{/if}}
+</section>
 
-  <h3>AI Recommendations</h3>
-  <ul id="ai-results"></ul>
-  <script>
-  (function(){
-    const $btn = document.getElementById('search-btn');
-    const $inp = document.getElementById('search-input');
-    const $out = document.getElementById('ai-results');
+<script>
+(() => {
+  const listEl = document.getElementById('class-list');
+  const btn    = document.getElementById('load-more');
+  const status = document.getElementById('load-status');
+  const fDept  = document.getElementById('f-dept');
+  const fCamp  = document.getElementById('f-campus');
+  const fPre   = document.getElementById('f-prereqs');
+  const fLev   = document.getElementById('f-level');
+  const fSort  = document.getElementById('f-sort');
+  const fOrd   = document.getElementById('f-order');
+  const fApply = document.getElementById('f-apply');
+  const fClear = document.getElementById('f-clear');
+  const fReset = document.getElementById('f-reset'); // NEW
 
-    // make links obvious & clickable
-    const style = document.createElement('style');
-    style.textContent = `
-      #ai-results a { text-decoration: underline; cursor: pointer; }
-    `;
-    document.head.appendChild(style);
+  if (!btn) return;
 
-    function renderAI(items){
-      $out.innerHTML = '';
-      if (!Array.isArray(items) || !items.length) {
-        const li = document.createElement('li');
-        li.textContent = 'No AI recommendations.';
-        $out.appendChild(li);
-        return;
-      }
+  // --- snapshot initial server-rendered state (so Reset can restore it) ---
+  const initialHTML      = listEl ? listEl.innerHTML : '';
+  const initialOffset    = parseInt(btn.dataset.initialOffset || btn.dataset.offset || '0', 10);
+  const initialHasMore   = (btn.dataset.initialHasMore || 'false') === 'true';
+  const initialSort      = 'code';
+  const initialOrder     = 'asc';
 
-      for (const it of items) {
-        const li = document.createElement('li');
+  function escapeHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
-        const href = it?.linkPath || ('/class/' + encodeURIComponent(it?.code || 'unknown'));
-        const codeOrTitle = (it?.code || it?.title || 'Unknown').toString();
+  function buildQuery(offset, limit) {
+    const p = new URLSearchParams({ offset, limit });
+    if (fDept.value) p.set('department', fDept.value);
+    if (fCamp.value) p.set('campus', fCamp.value);
+    if (fPre.value)  p.set('hasPrereqs', fPre.value);
+    if (fLev.value)  p.set('level', fLev.value);
+    if (fSort.value) p.set('sort', fSort.value);
+    if (fOrd.value)  p.set('order', fOrd.value);
+    return p.toString();
+  }
 
-        const a = document.createElement('a');
-        a.href = href;
-        a.textContent = codeOrTitle;
+  async function fetchPage(offset, limit, append=false) {
+    btn.disabled = true; status.textContent = 'Loading…';
+    try {
+      const qs = buildQuery(offset, limit);
+      const res = await fetch(`/api/classes?${qs}`);
+      if (!res.ok) throw new Error('Request failed');
+      const data = await res.json();
 
-        const sep = document.createTextNode(' — ');
-        const titleText = document.createTextNode((it?.title || '').toString());
+      const html = (data.items || []).map(it => `
+        <li class="class-item">
+          <h3 class="class-title">
+            <a href="/class/${encodeURIComponent(it._id)}">${escapeHtml(it.code)} — ${escapeHtml(it.title || '')}</a>
+          </h3>
+          <div class="class-meta">
+            <span>${escapeHtml(it.department || '')}</span>
+            ${it.campus ? ' • <span>' + escapeHtml(it.campus) + '</span>' : ''}
+            ${it.levelBand ? ' • <span>Level ' + escapeHtml(it.levelBand) + '+</span>' : ''}
+            ${it.hasPrereqs ? ' • <span>Prereqs</span>' : ''}
+          </div>
+          ${it.description ? '<p class="class-desc">' + escapeHtml(it.description) + '</p>' : ''}
+        </li>
+      `).join('');
 
-        const reasonDiv = document.createElement('div');
-        reasonDiv.style.fontSize = '.9em';
-        reasonDiv.style.color = '#888';
-        reasonDiv.textContent = (it?.reason || '').toString();
+      if (!append) listEl.innerHTML = '';
+      listEl.insertAdjacentHTML('beforeend', html);
 
-        li.appendChild(a);
-        li.appendChild(sep);
-        li.appendChild(titleText);
-        li.appendChild(reasonDiv);
-
-        $out.appendChild(li);
-      }
+      const nextOffset = data.nextOffset ?? (offset + (data.items?.length || 0));
+      btn.dataset.offset = String(nextOffset);
+      btn.style.display  = data.hasMore ? '' : 'none';
+      status.textContent = data.hasMore ? '' : 'All classes loaded.';
+    } catch (e) {
+      console.error(e);
+      status.textContent = 'Failed to load.';
+    } finally {
+      btn.disabled = false;
     }
+  }
 
-    async function doSearch() {
-      const query = $inp.value.trim();
-      if (!query) return;
-      try {
-        const res = await fetch('/api/search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query })
-        });
-        const data = await res.json();
-        // Quick sanity check
-        // console.log('AI payload:', data);
-        renderAI(data?.ai || []);
-      } catch (e) {
-        console.error(e);
-        $out.innerHTML = '<li>AI search failed.</li>';
-      }
-    }
+  // Load more keeps current filters
+  btn.addEventListener('click', () => {
+    const offset   = parseInt(btn.dataset.offset || '0', 10);
+    const pageSize = parseInt(btn.dataset.pageSize || '10', 10);
+    fetchPage(offset, pageSize, /*append*/ true);
+  });
 
-    $btn.addEventListener('click', doSearch);
-    $inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
-  })();
-  </script>
+  // Apply filters -> first page
+  fApply.addEventListener('click', () => {
+    btn.dataset.offset = '0';
+    fetchPage(0, parseInt(btn.dataset.pageSize || '10', 10), /*append*/ false);
+  });
+
+  // Clear (keeps current list, just refetches page 1)
+  fClear.addEventListener('click', () => {
+    fDept.value = '';
+    fCamp.value = '';
+    fPre.value  = '';
+    fLev.value  = '';
+    fSort.value = initialSort;
+    fOrd.value  = initialOrder;
+    btn.dataset.offset = '0';
+    fetchPage(0, parseInt(btn.dataset.pageSize || '10', 10), /*append*/ false);
+  });
+
+  // RESET: restore to original server-rendered state exactly
+  fReset.addEventListener('click', () => {
+    // clear filters to defaults
+    fDept.value = '';
+    fCamp.value = '';
+    fPre.value  = '';
+    fLev.value  = '';
+    fSort.value = initialSort;
+    fOrd.value  = initialOrder;
+
+    // restore list + button
+    listEl.innerHTML = initialHTML;
+    btn.dataset.offset = String(initialOffset);
+    btn.style.display  = initialHasMore ? '' : 'none';
+    status.textContent = '';
+    btn.disabled = false;
+  });
+})();
+</script>

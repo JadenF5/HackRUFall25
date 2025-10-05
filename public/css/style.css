@@ -334,3 +334,24 @@ footer .important-links li a:hover {
   padding: 8px 10px;
   font-size: 16px;
 }
+
+.club-list { list-style: none; padding: 0; margin: 0; }
+.club-item { padding: 12px 0; border-bottom: 1px solid #eee; }
+.club-title { margin: 0 0 4px; }
+.club-desc { margin: 0; color: #666; }
+
+
+.class-list { list-style: none; margin: 0; padding: 0; }
+.class-item { padding: 12px 0; border-bottom: 1px solid #eee; }
+.class-title { margin: 0 0 4px; font-size: 1.05rem; }
+.class-meta { color: #777; font-size: .95rem; }
+.class-desc { margin: 6px 0 0; color: #555; }
+
+
+.class-list { list-style: none; margin: 0; padding: 0; }
+.class-item { padding: 12px 0; border-bottom: 1px solid #eee; }
+.class-title { margin: 0 0 4px; font-size: 1.05rem; }
+.class-meta { color: #777; font-size: .95rem; }
+.class-desc { margin: 6px 0 0; color: #555; }
+.muted { color: #777; font-size: .9rem; }
+
