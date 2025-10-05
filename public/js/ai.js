@@ -5,27 +5,38 @@
   const cOut = document.getElementById('ai-class-results');
 
   function renderClassAI(items){
-    cOut.innerHTML = '';
-    if (!Array.isArray(items) || !items.length) {
-      cOut.innerHTML = '<li>No AI class recommendations.</li>';
-      return;
-    }
-    for (const it of items) {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      const href = it?.linkPath || ('/class/' + encodeURIComponent(it?.code || 'unknown'));
-      a.href = href;
-      a.textContent = it?.code || it?.title || 'Class';
-      const titleText = document.createTextNode(' — ' + (it?.title || ''));
-      const reason = document.createElement('div');
-      reason.className = 'muted';
-      reason.textContent = it?.reason || '';
-      li.appendChild(a);
-      li.appendChild(titleText);
-      li.appendChild(reason);
-      cOut.appendChild(li);
-    }
+  cOut.innerHTML = '';
+  if (!Array.isArray(items) || !items.length) {
+    cOut.innerHTML = '<li>No AI class recommendations.</li>';
+    return;
   }
+  for (const it of items) {
+    const li = document.createElement('li');
+
+    const code = document.createElement('strong');
+    code.textContent = it.code || 'Class';
+
+    const title = document.createElement('span');
+    title.textContent = it.title ? ` — ${it.title}` : '';
+
+    const reason = document.createElement('div');
+    reason.style.fontSize = '.9em';
+    reason.style.color = '#888';
+    reason.textContent = it.reason || '';
+
+    const prereqs = document.createElement('div');
+    prereqs.style.fontSize = '.85em';
+    prereqs.style.color = '#666';
+    prereqs.textContent = it.prereqs ? `Prereqs: ${it.prereqs}` : '';
+
+    li.appendChild(code);
+    li.appendChild(title);
+    li.appendChild(reason);
+    if (it.prereqs) li.appendChild(prereqs);
+
+    cOut.appendChild(li);
+  }
+}
 
   async function fetchClassAI() {
     const query = cIn.value.trim();
@@ -53,28 +64,38 @@
   const mOut = document.getElementById('ai-major-results');
 
   function renderMajorAI(items){
-    mOut.innerHTML = '';
-    if (!Array.isArray(items) || !items.length) {
-      mOut.innerHTML = '<li>No AI major suggestions.</li>';
-      return;
-    }
-    for (const it of items) {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      const href = it?.linkPath || ('/majors/' + encodeURIComponent(it?.code || 'unknown'));
-      a.href = href;
-      a.textContent = it?.code || it?.name || 'Major';
-      const nameText = document.createTextNode(' — ' + (it?.name || ''));
-      const reason = document.createElement('div');
-      reason.className = 'muted';
-      reason.textContent = it?.reason || '';
-      const prereqs = document.createElement('div');
-      prereqs.className = 'muted smaller';
-      if (it?.prereqs) prereqs.textContent = `Prereqs: ${it.prereqs}`;
-      li.appendChild(a); li.appendChild(nameText); li.appendChild(reason); li.appendChild(prereqs);
-      mOut.appendChild(li);
-    }
+  mOut.innerHTML = '';
+  if (!Array.isArray(items) || !items.length) {
+    mOut.innerHTML = '<li>No AI major suggestions.</li>';
+    return;
   }
+  for (const it of items) {
+    const li = document.createElement('li');
+
+    const code = document.createElement('strong');
+    code.textContent = it.code || 'Major';
+
+    const name = document.createElement('span');
+    name.textContent = it.name ? ` — ${it.name}` : '';
+
+    const reason = document.createElement('div');
+    reason.style.fontSize = '.9em';
+    reason.style.color = '#888';
+    reason.textContent = it.reason || '';
+
+    const prereqs = document.createElement('div');
+    prereqs.style.fontSize = '.85em';
+    prereqs.style.color = '#666';
+    prereqs.textContent = it.prereqs ? `Prereqs: ${it.prereqs}` : '';
+
+    li.appendChild(code);
+    li.appendChild(name);
+    li.appendChild(reason);
+    if (it.prereqs) li.appendChild(prereqs);
+
+    mOut.appendChild(li);
+  }
+}
 
   async function fetchMajorAI() {
     const interests = mIn.value.trim();
