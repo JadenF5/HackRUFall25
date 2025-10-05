@@ -329,10 +329,10 @@ router.get("/map", (req, res) => {
  */
 router.get("/about", (req, res) => {
   const creators = [
-    { name: "Jaden Fernandes",  role: "Backend", bio: "I made the AI/Clubs Listing/Map." },
-    { name: "Bryan Quizado",    role: "Fullstack", bio: "I made the Majors/Design." },
-    { name: "Nihal Yeruva",     role: "Backend", bio: "I made the Class Database/About Me." },
-    { name: "Dimitri Kakadelis", role: "Fullstack", bio: "I made the Buses/Rate My Professors." },
+    { name: "Jaden Fernandes",  role: "Backend", bio: "Made the AI/Clubs Listing/Map." },
+    { name: "Bryan Quizado",    role: "Fullstack", bio: "Worked on the Majors/Design." },
+    { name: "Nihal Yeruva",     role: "Backend", bio: "Established the Class Database/About Me." },
+    { name: "Dimitri Kakadelis", role: "Fullstack", bio: "Created the Buses/Rate My Professors/Design." },
   ];
   res.render("about", { creators, title: "About Us • ClassFoRU" });
 });
