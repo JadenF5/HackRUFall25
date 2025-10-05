@@ -26,20 +26,20 @@ router.get("/class/:id", async (req, res) => {
   res.render("class", { cls });
 });
 
-// /**
-//  * GET /majors
-//  * Page showing all majors
-//  */
+/**
+ * GET /majors
+ * Page showing all majors
+ */
 router.get("/majors", async (req, res) => {
   const majorsCol = await collections.majors();
   const majors = await majorsCol.find({}).toArray();
   res.render("majors", { majors });
 });
 
-// /**
-//  * GET /major/:id
-//  * Page showing a single major + its classes
-//  */
+/**
+ * GET /major/:id
+ * Page showing a single major + its classes
+ */
 router.get("/major/:id", async (req, res) => {
   const majorsCol = await collections.majors();
   const classesCol = await collections.classes();
