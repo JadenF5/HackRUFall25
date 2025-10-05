@@ -1,6 +1,26 @@
 <section>
-  <h2>All Clubs</h2>
-  <ul class="club-list">
+  <h2>Clubs</h2>
+
+  <div class="filters" style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin: .5rem 0 1rem;">
+    <select id="club-sort">
+      <option value="">Pick sort…</option>
+      <option value="alpha">Alphabetical (Name)</option>
+      <option value="popularity">Popularity</option>
+      <option value="members">Members</option>
+    </select>
+
+    <select id="club-order">
+      <option value="">Pick order…</option>
+      <option value="asc">Asc</option>
+      <option value="desc">Desc</option>
+    </select>
+
+    <button id="club-apply">Apply</button>
+    <button id="club-reset" type="button">Reset</button>
+    <span id="club-status" class="muted" style="margin-left:6px;"></span>
+  </div>
+
+  <ul id="club-list" class="club-list">
     {{#each clubs}}
       <li class="club-item">
         <h3 class="club-title"><a href="/club/{{_id}}">{{name}}</a></h3>
@@ -9,3 +29,78 @@
     {{/each}}
   </ul>
 </section>
+
+<script>
+(() => {
+  const $list = document.getElementById('club-list');
+  const $sort = document.getElementById('club-sort');
+  const $order = document.getElementById('club-order');
+  const $apply = document.getElementById('club-apply');
+  const $reset = document.getElementById('club-reset');
+  const $status = document.getElementById('club-status');
+
+  function esc(s){ return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;'); }
+
+  // Show order only for popularity/members
+  function toggleOrderVisibility() {
+    const s = $sort.value;
+    const show = (s === 'popularity' || s === 'members');
+    $order.style.display = show ? '' : 'none';
+    if (!show) $order.value = ''; // decouple alpha from asc/desc
+  }
+
+  function buildUrl(sort, order) {
+    const u = new URL('/api/clubs', window.location.origin);
+    if (sort) {
+      u.searchParams.set('sort', sort);
+      if (order) u.searchParams.set('order', order);
+    }
+    return u.toString();
+  }
+
+  async function loadClubs(sort='', order='') {
+    try {
+      $status.textContent = 'Loading…';
+      const res = await fetch(buildUrl(sort, order));
+      if (!res.ok) throw new Error('Failed');
+      const items = await res.json();
+      $list.innerHTML = (items || []).map(c => `
+        <li class="club-item">
+          <h3 class="club-title"><a href="/club/${encodeURIComponent(c._id)}">${esc(c.name)}</a></h3>
+          <p class="club-desc">${esc(c.description || '')}</p>
+        </li>
+      `).join('');
+      $status.textContent = '';
+    } catch (e) {
+      console.error(e);
+      $status.textContent = 'Failed to load clubs.';
+    }
+  }
+
+  // React to sort changes (hide/show order)
+  $sort.addEventListener('change', toggleOrderVisibility);
+
+  // Apply
+  $apply.addEventListener('click', () => {
+    const sort = $sort.value;   // '' | 'alpha' | 'popularity' | 'members'
+    if (!sort) return loadClubs('', '');        // no sort
+    if (sort === 'alpha') return loadClubs('alpha', ''); // alpha ignores order
+    const order = $order.value || 'asc';        // default for numeric sorts
+    loadClubs(sort, order);
+  });
+
+  // Reset to neutral (no params; order hidden)
+  $reset.addEventListener('click', () => {
+    $sort.value = '';
+    $order.value = '';
+    toggleOrderVisibility();
+    loadClubs('', '');
+  });
+
+  // Initialize
+  toggleOrderVisibility(); // ensure correct visibility on page load
+})();
+</script>

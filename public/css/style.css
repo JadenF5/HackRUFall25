@@ -515,3 +515,8 @@ header .logo img {
   border: 3px solid #fff;
   box-shadow: 0 2px 6px rgba(0,0,0,.08);
 }
+
+.club-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+.club-item { background:#f7f7f8; border:1px solid #e5e7eb; border-radius:12px; padding:16px; }
+.club-title { margin: 0 0 .25rem; }
+.club-desc { margin: 0; color:#4b5563; }

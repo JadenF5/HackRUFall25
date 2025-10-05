@@ -146,12 +146,39 @@ router.get("/majors/:id/classes", async (req, res) => {
  * GET /api/clubs
  * Returns: all clubs
  */
+// routes/api.js
+// routes/api.js
 router.get("/clubs", async (req, res) => {
   try {
+    const sortRaw  = String(req.query.sort || "").trim().toLowerCase();   // '' | 'alpha' | 'popularity' | 'members'
+    const orderRaw = String(req.query.order || "").trim().toLowerCase();  // '' | 'asc' | 'desc'
+
     const clubsCol = await collections.clubs();
-    const clubs = await clubsCol.find({}).toArray();
+    let cursor = clubsCol.find({});
+
+    if (sortRaw) {
+      let sortObj;
+
+      if (sortRaw === "alpha") {
+        // Always A→Z for name; ignore order param
+        sortObj = { name: 1 };
+      } else if (sortRaw === "popularity" || sortRaw === "members") {
+        // Apply order only to numeric fields
+        const dir = orderRaw === "desc" ? 1: -1; // desc=highest first, asc=lowest first
+        sortObj = { [sortRaw]: dir, name: 1 };    // tie-break by name
+      } else {
+        // Fallback to name asc
+        sortObj = { name: 1 };
+      }
+
+      cursor = cursor.sort(sortObj);
+    }
+    // else: no sort → natural DB order
+
+    const clubs = await cursor.toArray();
     res.json(clubs);
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: e.message });
   }
 });
