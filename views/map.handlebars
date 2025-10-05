@@ -1,0 +1,29 @@
+<section class="map-page">
+  <h2>Campus Map</h2>
+
+  <div class="map-controls">
+    <select id="map-campus">
+      <option value="">Jump to campus…</option>
+      <option value="collegeAve">College Ave</option>
+      <option value="busch">Busch</option>
+      <option value="livingston">Livingston</option>
+      <option value="cookDouglass">Cook/Douglass</option>
+    </select>
+  </div>
+
+  <div id="map"></div>
+</section>
+
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""
+/>
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+
+<script src="/js/map.js"></script>
