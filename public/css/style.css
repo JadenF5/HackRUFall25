@@ -50,9 +50,9 @@ header {
 
 /* Right side: project logo/title */
 .site-title {
-  font-size: 1.5rem;
+  font-size: 2.25rem;
   font-weight: bold;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #fff;
   text-decoration: none;
@@ -354,4 +354,44 @@ footer .important-links li a:hover {
 .class-meta { color: #777; font-size: .95rem; }
 .class-desc { margin: 6px 0 0; color: #555; }
 .muted { color: #777; font-size: .9rem; }
+
+.about-page {
+  text-align: center;
+  padding: 2rem;
+}
+
+.creators {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 per row */
+  gap: 2rem;
+  margin-top: 2rem;
+
+  max-width: 800px;   /* keeps it neat */
+  margin-left: auto;  /* centers the grid */
+  margin-right: auto;
+}
+
+.creator-card {
+  text-align: center;
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0
+
+
+
+.creator-card {
+  width: 250px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.creator-img {
+  width: 100%;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
 

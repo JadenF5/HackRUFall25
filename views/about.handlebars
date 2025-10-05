@@ -1,0 +1,13 @@
+<section class="about-page">
+  <h1>About the Creators</h1>
+  <div class="creators">
+    {{#each creators}}
+      <div class="creator-card">
+        <alt="{{this.name}}"/>
+        <h2>{{this.name}}</h2>
+        <h4>{{this.role}}</h4>
+        <p>{{this.bio}}</p>
+      </div>
+    {{/each}}
+  </div>
+</section>
