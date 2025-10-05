@@ -5,7 +5,11 @@
   <title>Rutgers Bus Routes</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { color: #c8102e; }
+    h1 { 
+      color: #c8102e; 
+      margin-top: 50px;   /* pushes the title down */
+      text-align: left; /* optional: centers the title */
+    }
     .bus-route { margin-bottom: 20px; }
     .bus-name { font-weight: bold; font-size: 1.2em; margin-bottom: 5px; }
     ul { margin: 0; padding-left: 20px; }
@@ -28,6 +32,5 @@
   {{else}}
     <p>No bus routes available.</p>
   {{/if}}
-
 </body>
 </html>
