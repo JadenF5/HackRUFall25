@@ -332,7 +332,7 @@ router.get("/about", (req, res) => {
     { name: "Jaden Fernandes",  role: "Backend", bio: "Made the AI/Clubs Listing/Map." },
     { name: "Bryan Quizado",    role: "Fullstack", bio: "Worked on the Majors/Design." },
     { name: "Nihal Yeruva",     role: "Backend", bio: "Established the Class Database/About Me." },
-    { name: "Dimitri Kakadelis", role: "Fullstack", bio: "Created the Buses/Rate My Professors/Design." },
+    { name: "Dimitri Kakadelis", role: "Fullstack", bio: "Created the Buses/Design." },
   ];
   res.render("about", { creators, title: "About Us • ClassFoRU" });
 });
