@@ -304,4 +304,9 @@ footer .important-links li a:hover {
   cursor: pointer;
 }
 
+.card { max-width: 900px; margin: 0 auto; }
+.card .row { display: flex; align-items: center; gap: 12px; }
+#ai-class-input, #ai-major-input { flex: 1 1 auto; width: 100%; padding: 10px 12px; font-size: 16px; }
+#ai-class-btn, #ai-major-btn { flex: 0 0 auto; padding: 10px 16px; white-space: nowrap; }
+
 

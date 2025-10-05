@@ -9,7 +9,7 @@ const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 function parseArrayish(text) {
   if (!text || typeof text !== 'string') return null;
 
-  // 1) try to parse entire text
+  // 1) full parse
   try {
     const full = JSON.parse(text);
     if (Array.isArray(full)) return full;
@@ -20,7 +20,7 @@ function parseArrayish(text) {
     }
   } catch (_) {}
 
-  // 2) slice the first bracketed array
+  // 2) slice first [...] block
   const start = text.indexOf('[');
   const end   = text.lastIndexOf(']');
   if (start >= 0 && end > start) {
@@ -99,7 +99,6 @@ function fallbackClassSuggestions(userInterests, max = 5) {
   if (q.includes('security') || q.includes('cyber')) {
     push('CS356', 'Computer Security', 'Foundations of system and network security.', 'CS112');
   }
-
   // generic fillers
   push('CS201', 'Computer Systems', 'C programming, memory, processes and OS basics.', 'CS112');
   push('MATH151', 'Calculus I', 'Calculus for STEM foundations.');
@@ -111,102 +110,92 @@ function fallbackClassSuggestions(userInterests, max = 5) {
 export async function getClassRecommendations(userInterests, max = 5) {
   if (!userInterests || !userInterests.trim()) return [];
 
-  const prompt = buildPrompt(userInterests, max);
+  // ❌ was buildPrompt(...) — that function doesn’t exist
+  const prompt = buildPromptClasses(userInterests, max);
 
-  let text;
+  let text = '';
   for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      text = await genWithGroq(prompt, { useJsonMode: true });
-      break;
-    } catch (e) {
-      if (attempt === 1) throw e;
-      await new Promise(r => setTimeout(r, 600));
-    }
+    try { text = await genWithGroq(prompt); break; }
+    catch (e) { if (attempt === 1) throw e; await new Promise(r => setTimeout(r, 600)); }
   }
 
-  // Extract JSON array
-  const start = text.indexOf('[');
-  const jsonText = start >= 0 ? text.slice(start) : text;
+  const arr = parseArrayish(text) || [];
+  const finalArr = arr.length ? arr : fallbackClassSuggestions(userInterests, max);
 
-  try {
-    const arr = JSON.parse(jsonText);
-    if (!Array.isArray(arr)) throw new Error('not array');
-    // normalize + add linkPath
-    // inside getClassRecommendations, after you parsed `arr`:
-    return arr.slice(0, max).map(it => {
-      const rawCode = String(it?.code ?? '').trim();
-      const title = String(it?.title ?? '').trim();
-      const reason = String(it?.reason ?? '').trim();
-      const prereqs = String(it?.prereqs ?? '').trim();
-      // Slug/ID to use if no code was provided
-      const fallbackCode = title ? title.replace(/[^A-Za-z0-9]+/g, '').slice(0, 40) : 'unknown';
-      const code = rawCode || fallbackCode;
-      // Your route expects /class/:id (e.g., /class/CS101)
-      const linkPath = `/class/${encodeURIComponent(code)}`;
-      return { code, title, reason, prereqs, linkPath };
-    });
-  } catch {
-    return [{ code: 'AI', title: 'AI output (parse failed)', reason: text.slice(0, 300), prereqs: '', linkPath: '/class/AI' }];
-  }
+  return finalArr.slice(0, max).map(it => {
+    const rawCode = String(it?.code ?? '').trim();
+    const title = String(it?.title ?? '').trim();
+    const reason = String(it?.reason ?? '').trim();
+    const prereqs = String(it?.prereqs ?? '').trim();
+    const fallbackCode = title ? title.replace(/[^A-Za-z0-9]+/g, '').slice(0, 40) : 'unknown';
+    const code = rawCode || fallbackCode;
+    // no link fields (non-clickable UI)
+    return { code, title, reason, prereqs };
+  });
 }
 
-// --- majors finder: suggests Rutgers majors + prereqs ---
+/* ----------------- MAJORS ----------------- */
 function buildMajorsPrompt(userInterests, max) {
   return `
 You recommend **Rutgers University** undergraduate majors.
 
 Rules:
 - Prefer real Rutgers majors (e.g., Computer Science, ECE, Psychology, Business Analytics, HCI, etc.).
-- Output ONLY valid JSON (no prose): array with up to ${max} objects.
+- Output ONLY a JSON array (no prose, no wrapper object) with up to ${max} objects.
 - Each object MUST be:
   {"code": string, "name": string, "reason": string (one short sentence), "prereqs": string (short list or empty)}
 - "code" should be a short slug (e.g., "CS", "ECE", "PSY", "BAIT"). If unsure, make a short alphanumeric slug without spaces.
-- No extra keys, no markdown.
 - If unsure, return [].
 
 Student interests: "${userInterests}"
 `.trim();
 }
 
-export async function getMajorSuggestions(userInterests, max = 5) {
-  if (!userInterests || !userInterests.trim()) return [];
-  const prompt = buildMajorsPrompt(userInterests, max);
+function fallbackMajorSuggestions(userInterests, max = 5) {
+  const q = (userInterests || '').toLowerCase();
+  const out = [];
+  const push = (code, name, reason, prereqs = '') =>
+    out.length < max && out.push({ code, name, reason, prereqs });
 
-  let text;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      text = await genWithGroq(prompt, { useJsonMode: true });
-      break;
-    } catch (e) {
-      if (attempt === 1) throw e;
-      await new Promise(r => setTimeout(r, 600));
-    }
+  if (q.includes('math')) {
+    push('MATH', 'Mathematics', 'Deepen proof-based and applied math foundations.');
+    push('STAT', 'Statistics', 'Focus on probability, inference, and data analysis.');
+    push('CS', 'Computer Science', 'Algorithmic thinking and software systems.', 'Calc I–II suggested');
+  } else if (q.includes('history')) {
+    push('HIST', 'History', 'Explore the past and its impact on the present.');
+    push('AMST', 'American Studies', 'Interdisciplinary approach to U.S. culture and history.');
+    push('PSY', 'Psychology', 'Human behavior and cognition fundamentals.');
   }
 
-  const start = text.indexOf('[');
-  const jsonText = start >= 0 ? text.slice(start) : text;
+  // generic fillers
+  push('BAIT', 'Business Analytics & Information Technology', 'Bridge business and data for decision-making.');
+  push('CIS',  'Cognitive Science', 'Mind, computation, and behavior across disciplines.');
 
-  try {
-    const arr = JSON.parse(jsonText);
-    if (!Array.isArray(arr)) throw new Error('not array');
-
-    return arr.slice(0, max).map(it => {
-      const rawCode = String(it?.code ?? '').trim();
-      const name = String(it?.name ?? '').trim();
-      const reason = String(it?.reason ?? '').trim();
-      const prereqs = String(it?.prereqs ?? '').trim();
-
-      const fallback = (name || 'Major').replace(/[^A-Za-z0-9]+/g, '').slice(0, 20) || 'Major';
-      const code = rawCode || fallback;
-
-      // point to your majors view; adjust if your route differs
-      const linkPath = `/majors/${encodeURIComponent(code)}`;
-      return { code, name, reason, prereqs, linkPath };
-    });
-  } catch {
-    return [{ code: 'AI', name: 'AI output (parse failed)', reason: text.slice(0, 300), prereqs: '', linkPath: '/majors/AI' }];
-  }
+  return out.slice(0, max);
 }
 
-// keep default export updated
+export async function getMajorSuggestions(userInterests, max = 5) {
+  if (!userInterests || !userInterests.trim()) return [];
+
+  const prompt = buildMajorsPrompt(userInterests, max);
+
+  let text = '';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try { text = await genWithGroq(prompt); break; }
+    catch (e) { if (attempt === 1) throw e; await new Promise(r => setTimeout(r, 600)); }
+  }
+
+  const arr = parseArrayish(text) || [];
+  const finalArr = arr.length ? arr : fallbackMajorSuggestions(userInterests, max);
+
+  return finalArr.slice(0, max).map(it => {
+    const rawCode = String(it?.code ?? '').trim();
+    const name = String(it?.name ?? '').trim();
+    const reason = String(it?.reason ?? '').trim();
+    const prereqs = String(it?.prereqs ?? '').trim();
+    const code = rawCode || (name || 'Major').replace(/[^A-Za-z0-9]+/g, '').slice(0, 20) || 'Major';
+    return { code, name, reason, prereqs };
+  });
+}
+
 export default { getClassRecommendations, getMajorSuggestions };
