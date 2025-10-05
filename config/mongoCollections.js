@@ -17,6 +17,10 @@ export default {
   ratings: async function () {
     const db = getDb();
     return db.collection("ratings");
+  },
+  bus: async function () {
+    const db = getDb();
+    return db.collection("bus");
   }
 };
 

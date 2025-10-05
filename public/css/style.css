@@ -310,3 +310,27 @@ footer .important-links li a:hover {
 #ai-class-btn, #ai-major-btn { flex: 0 0 auto; padding: 10px 16px; white-space: nowrap; }
 
 
+.map-page #map {
+  height: 70vh;
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  margin-top: 10px;
+}
+
+.map-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.map-controls input {
+  padding: 8px 10px;
+  font-size: 16px;
+}
+
+.map-controls button, .map-controls select {
+  padding: 8px 10px;
+  font-size: 16px;
+}

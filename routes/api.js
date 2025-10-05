@@ -39,6 +39,40 @@ router.get("/majors", async (req, res) => {
   }
 });
 
+router.get("/api/buses", async (req, res) => {
+  try {
+    const busCol = await collections.bus();
+    const buses = await busCol.find({}).toArray();
+    res.json(buses);
+  } catch (e) {
+    console.error("Error fetching buses:", e);
+    res.status(500).json({ error: "Could not fetch buses" });
+  }
+});
+
+/**
+ * GET /api/buses/:id
+ * Returns single bus by ID
+ */
+router.get("/api/buses/:id", async (req, res) => {
+  try {
+    const busCol = await collections.bus();
+    let busDoc;
+
+    try {
+      busDoc = await busCol.findOne({ _id: new ObjectId(req.params.id) });
+    } catch {
+      return res.status(400).json({ error: "Invalid bus ID" });
+    }
+
+    if (!busDoc) return res.status(404).json({ error: "Bus not found" });
+    res.json(busDoc);
+  } catch (e) {
+    console.error("Error fetching bus:", e);
+    res.status(500).json({ error: "Could not fetch bus" });
+  }
+});
+
 /**
  * GET /api/majors/:id/classes
  * Returns: classes belonging to a given major
