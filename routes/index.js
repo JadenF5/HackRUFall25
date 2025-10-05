@@ -329,31 +329,12 @@ router.get("/map", (req, res) => {
  */
 router.get("/about", (req, res) => {
   const creators = [
-    {
-      name: "Jaden Fernandes",
-      role: "Role",
-      bio: "im a noob.",
-    },
-    {
-      name: "Bryan Quizado",
-      role: "role",
-      bio: "i did nothing all day",
-    },
-    {
-      name: "Nihal Yeruva",
-      role: "role",
-      bio: "im actually the goat",
-    },
-    {
-      name: "Dimitri Kakadelis",
-      role: "role",
-      bio: "i need chatgpt 5 to function",
-    }
+    { name: "Jaden Fernandes",  role: "Backend", bio: "I made the AI/Clubs Listing/Map." },
+    { name: "Bryan Quizado",    role: "Fullstack", bio: "I made the Majors/Design." },
+    { name: "Nihal Yeruva",     role: "Backend", bio: "I made the Class Database/About Me." },
+    { name: "Dimitri Kakadelis", role: "Fullstack", bio: "I made the Buses/Rate My Professors." },
   ];
-
   res.render("about", { creators, title: "About Us • ClassFoRU" });
 });
-
-
 
 export default router;
